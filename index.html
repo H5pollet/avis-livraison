@@ -150,8 +150,21 @@
   <div class="carte">
     <span class="croix" aria-hidden="true"></span>
 
+    <!-- Chargement -->
+    <div id="vue-chargement" class="etat">
+      <p>Chargement…</p>
+    </div>
+
+    <!-- Lien invalide (clé absente ou incorrecte) -->
+    <div id="vue-invalide" class="etat cache">
+      <div class="fleche" aria-hidden="true"></div>
+      <span class="surtitre">Lien invalide</span>
+      <h1>Ce lien n'est pas reconnu.</h1>
+      <p>Vérifiez qu'il a bien été copié en entier depuis le SMS reçu après votre livraison.</p>
+    </div>
+
     <!-- Formulaire -->
-    <form id="vue-form" novalidate>
+    <form id="vue-form" class="cache" novalidate>
       <div class="hachures" aria-hidden="true"></div>
       <h1>Comment s'est passée votre livraison&nbsp;?</h1>
       <p class="intro">30 secondes pour nous aider à nous améliorer. Merci&nbsp;!</p>
@@ -243,14 +256,17 @@
     this.replaceWith(t);
   });
 
-  // Référence facultative passée dans le lien (ex. ?c=12345 si ton outil SMS sait insérer une variable)
   const params = new URLSearchParams(location.search);
+  // Clé d'accès présente dans le lien du SMS (?k=…), vérifiée par le serveur
+  const cle = (params.get('k') || '').trim().slice(0, 64);
+  // Référence facultative passée dans le lien (ex. &c=12345 si ton outil SMS sait insérer une variable)
   const ref = (params.get('c') || params.get('ref') || '').trim().slice(0, 50);
 
   let note = 0;
   const $ = id => document.getElementById(id);
   const afficher = vue => {
-    ['vue-form', 'vue-merci', 'vue-deja'].forEach(v => $(v).classList.toggle('cache', v !== vue));
+    ['vue-chargement', 'vue-invalide', 'vue-form', 'vue-merci', 'vue-deja']
+      .forEach(v => $(v).classList.toggle('cache', v !== vue));
   };
 
   if (!DEMANDER_IDENTIFIANT || ref) $('bloc-identifiant').classList.add('cache');
@@ -266,7 +282,6 @@
   function memoriserReponse() {
     try { localStorage.setItem(CLE, String(Date.now())); } catch (e) {}
   }
-  if (dejaRepondu()) afficher('vue-deja');
   $('btn-nouvelle').addEventListener('click', () => afficher('vue-form'));
 
   // ---- Étoiles ----
@@ -311,7 +326,8 @@
     note_invalide: 'Merci de choisir une note.',
     occupe: 'Serveur occupé, réessayez dans quelques secondes.',
     format_invalide: 'Une erreur est survenue, réessayez.',
-    reponse_invalide: 'Une erreur est survenue, réessayez.'
+    reponse_invalide: 'Une erreur est survenue, réessayez.',
+    trop_de_reponses: 'Nous recevons beaucoup de réponses en ce moment. Merci de réessayer un peu plus tard.'
   };
 
   $('vue-form').addEventListener('submit', async e => {
@@ -325,6 +341,7 @@
 
     const choix = document.querySelector('input[name="ponctualite"]:checked');
     const payload = {
+      k: cle,
       note,
       ponctualite: choix ? choix.value : '',
       commentaire: $('commentaire').value.trim(),
@@ -342,6 +359,7 @@
       });
       const res = await rep.json();
 
+      if (!res.ok && res.erreur === 'cle_invalide') { afficher('vue-invalide'); return; }
       if (!res.ok) throw new Error(res.erreur);
 
       memoriserReponse();
@@ -357,6 +375,21 @@
       btn.textContent = 'ENVOYER MON AVIS';
     }
   });
+
+  // ---- Démarrage : vérification de la clé du lien ----
+  (async function init() {
+    if (!cle) { afficher('vue-invalide'); return; }
+    if (dejaRepondu()) { afficher('vue-deja'); return; }
+    try {
+      const rep = await fetch(API_URL + '?action=check&k=' + encodeURIComponent(cle));
+      const res = await rep.json();
+      if (!res.valid) { afficher('vue-invalide'); return; }
+    } catch (err) {
+      // Échec réseau de la vérification : on affiche quand même le formulaire,
+      // le serveur revérifie la clé à l'envoi.
+    }
+    afficher('vue-form');
+  })();
 </script>
 </body>
 </html>
