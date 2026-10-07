@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Votre avis sur la livraison — Bocklip</title>
+  <style>
+    :root {
+      --fond: #f6f4f0;
+      --carte: #ffffff;
+      --texte: #1f1f1f;
+      --discret: #6b6b6b;
+      --bordure: #e3dfd8;
+      --accent: #1f3a33;        /* couleur principale — à ajuster à la charte Bocklip */
+      --accent-texte: #ffffff;
+      --etoile: #d9d4cb;
+      --etoile-on: #e8a317;
+      --erreur: #b3261e;
+      --rayon: 14px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--fond);
+      color: var(--texte);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.45;
+    }
+    main { max-width: 520px; margin: 0 auto; padding: 24px 16px 48px; }
+    .logo { font-weight: 700; letter-spacing: .14em; font-size: 15px; color: var(--accent); text-align: center; margin: 8px 0 20px; }
+    .carte { background: var(--carte); border: 1px solid var(--bordure); border-radius: var(--rayon); padding: 24px 20px; }
+    h1 { font-size: 21px; margin: 0 0 6px; line-height: 1.3; }
+    .intro { color: var(--discret); margin: 0 0 24px; font-size: 15px; }
+    .question { margin: 0 0 26px; }
+    .question > label, .question > .titre { display: block; font-weight: 600; margin-bottom: 10px; font-size: 16px; }
+
+    /* Étoiles */
+    .etoiles { display: flex; justify-content: space-between; gap: 2px; }
+    .etoile {
+      flex: 1 1 0; max-width: 44px; aspect-ratio: 1;
+      padding: 0; border: 0; background: none; cursor: pointer;
+      color: var(--etoile); transition: transform .1s, color .1s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .etoile svg { width: 100%; height: 100%; display: block; }
+    .etoile.on { color: var(--etoile-on); }
+    .etoile:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+    .etoile:active { transform: scale(.9); }
+    .echelle { display: flex; justify-content: space-between; font-size: 12px; color: var(--discret); margin-top: 6px; }
+    .valeur { text-align: center; font-weight: 600; margin-top: 8px; min-height: 22px; color: var(--accent); }
+
+    /* Choix */
+    .choix { display: flex; gap: 8px; }
+    .choix input { position: absolute; opacity: 0; pointer-events: none; }
+    .choix label {
+      flex: 1; text-align: center; padding: 11px 6px; border: 1px solid var(--bordure);
+      border-radius: 10px; cursor: pointer; font-size: 15px; background: #fff;
+    }
+    .choix input:checked + label { background: var(--accent); color: var(--accent-texte); border-color: var(--accent); }
+    .choix input:focus-visible + label { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+    textarea {
+      width: 100%; min-height: 96px; padding: 12px; font: inherit; font-size: 16px;
+      border: 1px solid var(--bordure); border-radius: 10px; resize: vertical;
+    }
+    textarea:focus { outline: 2px solid var(--accent); border-color: transparent; }
+    .facultatif { font-weight: 400; color: var(--discret); font-size: 14px; }
+
+    button.envoyer, a.bouton {
+      display: block; width: 100%; padding: 14px; border: 0; border-radius: 10px;
+      background: var(--accent); color: var(--accent-texte); font: inherit; font-size: 16px; font-weight: 600;
+      cursor: pointer; text-align: center; text-decoration: none;
+    }
+    button.envoyer:disabled { opacity: .4; cursor: not-allowed; }
+    .message-erreur { color: var(--erreur); font-size: 14px; margin-top: 10px; min-height: 20px; text-align: center; }
+
+    .etat { text-align: center; padding: 12px 0; }
+    .etat .icone { font-size: 44px; margin-bottom: 8px; }
+    .etat p { color: var(--discret); }
+    .cache { display: none !important; }
+    .chargement { text-align: center; color: var(--discret); padding: 40px 0; }
+  </style>
+</head>
+<body>
+<main>
+  <div class="logo">BOCKLIP</div>
+
+  <div class="carte">
+    <div id="vue-chargement" class="chargement">Chargement…</div>
+
+    <!-- Formulaire -->
+    <form id="vue-form" class="cache" novalidate>
+      <h1>Comment s'est passée votre livraison ?</h1>
+      <p class="intro">30 secondes pour nous aider à nous améliorer. Merci !</p>
+
+      <div class="question">
+        <span class="titre" id="titre-note">Globalement, êtes-vous satisfait de votre livraison ?</span>
+        <div class="etoiles" id="etoiles" role="radiogroup" aria-labelledby="titre-note"></div>
+        <div class="echelle"><span>Pas du tout</span><span>Totalement</span></div>
+        <div class="valeur" id="valeur" aria-live="polite"></div>
+      </div>
+
+      <div class="question">
+        <span class="titre">Le livreur a-t-il été ponctuel et soigneux ?</span>
+        <div class="choix">
+          <input type="radio" name="ponctualite" id="p-oui" value="Oui"><label for="p-oui">Oui</label>
+          <input type="radio" name="ponctualite" id="p-plutot" value="Plutôt"><label for="p-plutot">Plutôt</label>
+          <input type="radio" name="ponctualite" id="p-non" value="Non"><label for="p-non">Non</label>
+        </div>
+      </div>
+
+      <div class="question">
+        <label for="commentaire"><span id="libelle-commentaire">Un commentaire ?</span> <span class="facultatif">(facultatif)</span></label>
+        <textarea id="commentaire" maxlength="2000"></textarea>
+      </div>
+
+      <button type="submit" class="envoyer" id="btn-envoyer" disabled>Envoyer mon avis</button>
+      <div class="message-erreur" id="erreur" role="alert"></div>
+    </form>
+
+    <!-- Merci -->
+    <div id="vue-merci" class="etat cache">
+      <div class="icone">🙏</div>
+      <h1>Merci pour votre avis !</h1>
+      <p id="merci-texte">Votre réponse a bien été enregistrée.</p>
+      <div id="bloc-avis-google" class="cache">
+        <p>Vous avez apprécié ? Un avis Google nous aiderait énormément.</p>
+        <a class="bouton" id="lien-avis-google" href="#" target="_blank" rel="noopener">Laisser un avis Google</a>
+      </div>
+    </div>
+
+    <!-- Déjà répondu -->
+    <div id="vue-deja" class="etat cache">
+      <div class="icone">✅</div>
+      <h1>Vous avez déjà répondu</h1>
+      <p>Merci, votre avis sur cette livraison est bien enregistré.</p>
+    </div>
+
+    <!-- Lien invalide -->
+    <div id="vue-invalide" class="etat cache">
+      <div class="icone">🔗</div>
+      <h1>Lien invalide</h1>
+      <p>Ce lien semble incomplet. Vérifiez qu'il a bien été copié en entier depuis le SMS.</p>
+    </div>
+  </div>
+</main>
+
+<script>
+  // URL de déploiement de la web app Apps Script (se termine par /exec)
+  const API_URL = 'https://script.google.com/macros/s/AKfycbxKAldrcFjeH8x274SprsK8_NQ_OV0gmtCc4OTsyveS6NEAF0ewsplk7krH2xnoivVB8w/exec';
+
+  const LIBELLES = {
+    1: 'Très déçu', 2: 'Déçu', 3: 'Insatisfait', 4: 'Plutôt insatisfait', 5: 'Moyen',
+    6: 'Correct', 7: 'Satisfait', 8: 'Très satisfait', 9: 'Parfait !'
+  };
+
+  const token = (new URLSearchParams(location.search).get('t') || '').trim().toLowerCase();
+  let note = 0;
+
+  const $ = id => document.getElementById(id);
+  const afficher = vue => {
+    ['vue-chargement', 'vue-form', 'vue-merci', 'vue-deja', 'vue-invalide']
+      .forEach(v => $(v).classList.toggle('cache', v !== vue));
+  };
+
+  // ---- Étoiles ----
+  const SVG_ETOILE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6L2.5 9.4l6.6-.8z"/></svg>';
+  const boutons = [];
+  for (let i = 1; i <= 9; i++) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'etoile';
+    b.setAttribute('role', 'radio');
+    b.setAttribute('aria-checked', 'false');
+    b.setAttribute('aria-label', i + ' sur 9 — ' + LIBELLES[i]);
+    b.innerHTML = SVG_ETOILE;
+    b.addEventListener('click', () => choisirNote(i));
+    b.addEventListener('mouseenter', () => colorier(i));
+    b.addEventListener('mouseleave', () => colorier(note));
+    b.addEventListener('keydown', e => {
+      if (e.key === 'ArrowRight' || e.key === 'ArrowUp') { e.preventDefault(); choisirNote(Math.min(9, (note || 0) + 1), true); }
+      if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') { e.preventDefault(); choisirNote(Math.max(1, (note || 2) - 1), true); }
+    });
+    boutons.push(b);
+    $('etoiles').appendChild(b);
+  }
+
+  function colorier(n) {
+    boutons.forEach((b, idx) => b.classList.toggle('on', idx < n));
+  }
+
+  function choisirNote(n, focus) {
+    note = n;
+    colorier(n);
+    boutons.forEach((b, idx) => b.setAttribute('aria-checked', String(idx + 1 === n)));
+    if (focus) boutons[n - 1].focus();
+    $('valeur').textContent = n + ' / 9 — ' + LIBELLES[n];
+    $('libelle-commentaire').textContent = n <= 5 ? 'Que pourrions-nous améliorer ?' : 'Un commentaire ?';
+    $('btn-envoyer').disabled = false;
+    $('erreur').textContent = '';
+  }
+
+  // ---- Envoi ----
+  const MESSAGES_ERREUR = {
+    lien_invalide: 'Ce lien n\'est pas reconnu.',
+    note_invalide: 'Merci de choisir une note.',
+    occupe: 'Serveur occupé, réessayez dans quelques secondes.',
+    format_invalide: 'Une erreur est survenue, réessayez.'
+  };
+
+  $('vue-form').addEventListener('submit', async e => {
+    e.preventDefault();
+    if (!note) { $('erreur').textContent = MESSAGES_ERREUR.note_invalide; return; }
+
+    const btn = $('btn-envoyer');
+    btn.disabled = true;
+    btn.textContent = 'Envoi…';
+    $('erreur').textContent = '';
+
+    const choix = document.querySelector('input[name="ponctualite"]:checked');
+    const payload = {
+      token,
+      note,
+      ponctualite: choix ? choix.value : '',
+      commentaire: $('commentaire').value.trim()
+    };
+
+    try {
+      // text/plain évite la requête préliminaire CORS, non gérée par Apps Script
+      const rep = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(payload)
+      });
+      const res = await rep.json();
+
+      if (res.ok) {
+        if (res.avisGoogle) {
+          $('lien-avis-google').href = res.avisGoogle;
+          $('bloc-avis-google').classList.remove('cache');
+        }
+        afficher('vue-merci');
+      } else if (res.erreur === 'deja_repondu') {
+        afficher('vue-deja');
+      } else if (res.erreur === 'lien_invalide') {
+        afficher('vue-invalide');
+      } else {
+        throw new Error(res.erreur);
+      }
+    } catch (err) {
+      $('erreur').textContent = MESSAGES_ERREUR[err.message] || 'Connexion impossible, vérifiez votre réseau et réessayez.';
+      btn.disabled = false;
+      btn.textContent = 'Envoyer mon avis';
+    }
+  });
+
+  // ---- Vérification du lien au chargement ----
+  (async function init() {
+    if (!/^[a-z0-9]{6,16}$/.test(token)) { afficher('vue-invalide'); return; }
+    try {
+      const rep = await fetch(API_URL + '?action=check&t=' + encodeURIComponent(token));
+      const res = await rep.json();
+      if (!res.valid) { afficher('vue-invalide'); return; }
+      if (res.deja) { afficher('vue-deja'); return; }
+    } catch (err) {
+      // En cas d'échec réseau de la vérification, on affiche quand même le formulaire :
+      // le serveur revérifie le token à l'envoi.
+    }
+    afficher('vue-form');
+  })();
+</script>
+</body>
+</html>
