@@ -60,12 +60,16 @@
     .choix input:checked + label { background: var(--accent); color: var(--accent-texte); border-color: var(--accent); }
     .choix input:focus-visible + label { outline: 2px solid var(--accent); outline-offset: 2px; }
 
-    textarea {
-      width: 100%; min-height: 96px; padding: 12px; font: inherit; font-size: 16px;
-      border: 1px solid var(--bordure); border-radius: 10px; resize: vertical;
+    textarea, input[type="text"] {
+      width: 100%; padding: 12px; font: inherit; font-size: 16px;
+      border: 1px solid var(--bordure); border-radius: 10px;
     }
-    textarea:focus { outline: 2px solid var(--accent); border-color: transparent; }
+    textarea { min-height: 96px; resize: vertical; }
+    textarea:focus, input[type="text"]:focus { outline: 2px solid var(--accent); border-color: transparent; }
     .facultatif { font-weight: 400; color: var(--discret); font-size: 14px; }
+
+    /* Champ piège anti-robots : invisible pour les humains */
+    .piege { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
 
     button.envoyer, a.bouton {
       display: block; width: 100%; padding: 14px; border: 0; border-radius: 10px;
@@ -78,8 +82,8 @@
     .etat { text-align: center; padding: 12px 0; }
     .etat .icone { font-size: 44px; margin-bottom: 8px; }
     .etat p { color: var(--discret); }
+    .lien-discret { background: none; border: 0; color: var(--discret); text-decoration: underline; font: inherit; font-size: 14px; cursor: pointer; margin-top: 16px; }
     .cache { display: none !important; }
-    .chargement { text-align: center; color: var(--discret); padding: 40px 0; }
   </style>
 </head>
 <body>
@@ -87,10 +91,8 @@
   <div class="logo">BOCKLIP</div>
 
   <div class="carte">
-    <div id="vue-chargement" class="chargement">Chargement…</div>
-
     <!-- Formulaire -->
-    <form id="vue-form" class="cache" novalidate>
+    <form id="vue-form" novalidate>
       <h1>Comment s'est passée votre livraison ?</h1>
       <p class="intro">30 secondes pour nous aider à nous améliorer. Merci !</p>
 
@@ -115,6 +117,16 @@
         <textarea id="commentaire" maxlength="2000"></textarea>
       </div>
 
+      <div class="question" id="bloc-identifiant">
+        <label for="identifiant">N° de commande ou nom <span class="facultatif">(facultatif)</span></label>
+        <input type="text" id="identifiant" maxlength="100" autocomplete="off">
+      </div>
+
+      <div class="piege" aria-hidden="true">
+        <label for="site">Ne pas remplir</label>
+        <input type="text" id="site" tabindex="-1" autocomplete="off">
+      </div>
+
       <button type="submit" class="envoyer" id="btn-envoyer" disabled>Envoyer mon avis</button>
       <div class="message-erreur" id="erreur" role="alert"></div>
     </form>
@@ -123,46 +135,65 @@
     <div id="vue-merci" class="etat cache">
       <div class="icone">🙏</div>
       <h1>Merci pour votre avis !</h1>
-      <p id="merci-texte">Votre réponse a bien été enregistrée.</p>
+      <p>Votre réponse a bien été enregistrée.</p>
       <div id="bloc-avis-google" class="cache">
         <p>Vous avez apprécié ? Un avis Google nous aiderait énormément.</p>
         <a class="bouton" id="lien-avis-google" href="#" target="_blank" rel="noopener">Laisser un avis Google</a>
       </div>
     </div>
 
-    <!-- Déjà répondu -->
+    <!-- Déjà répondu (même téléphone, dans les 7 derniers jours) -->
     <div id="vue-deja" class="etat cache">
       <div class="icone">✅</div>
-      <h1>Vous avez déjà répondu</h1>
-      <p>Merci, votre avis sur cette livraison est bien enregistré.</p>
-    </div>
-
-    <!-- Lien invalide -->
-    <div id="vue-invalide" class="etat cache">
-      <div class="icone">🔗</div>
-      <h1>Lien invalide</h1>
-      <p>Ce lien semble incomplet. Vérifiez qu'il a bien été copié en entier depuis le SMS.</p>
+      <h1>Merci, vous avez déjà répondu</h1>
+      <p>Votre avis a bien été enregistré.</p>
+      <button type="button" class="lien-discret" id="btn-nouvelle">Donner un avis sur une autre livraison</button>
     </div>
   </div>
 </main>
 
 <script>
+  // ================= CONFIGURATION =================
   // URL de déploiement de la web app Apps Script (se termine par /exec)
   const API_URL = 'https://script.google.com/macros/s/AKfycbxKAldrcFjeH8x274SprsK8_NQ_OV0gmtCc4OTsyveS6NEAF0ewsplk7krH2xnoivVB8w/exec';
+
+  // Afficher le champ facultatif "N° de commande ou nom" (false pour le masquer)
+  const DEMANDER_IDENTIFIANT = true;
+
+  // Durée pendant laquelle un même téléphone voit "déjà répondu" (jours)
+  const JOURS_ANTI_DOUBLON = 7;
+  // =================================================
 
   const LIBELLES = {
     1: 'Très déçu', 2: 'Déçu', 3: 'Insatisfait', 4: 'Plutôt insatisfait', 5: 'Moyen',
     6: 'Correct', 7: 'Satisfait', 8: 'Très satisfait', 9: 'Parfait !'
   };
 
-  const token = (new URLSearchParams(location.search).get('t') || '').trim().toLowerCase();
-  let note = 0;
+  // Référence facultative passée dans le lien (ex. ?c=12345 si ton outil SMS sait insérer une variable)
+  const params = new URLSearchParams(location.search);
+  const ref = (params.get('c') || params.get('ref') || '').trim().slice(0, 50);
 
+  let note = 0;
   const $ = id => document.getElementById(id);
   const afficher = vue => {
-    ['vue-chargement', 'vue-form', 'vue-merci', 'vue-deja', 'vue-invalide']
-      .forEach(v => $(v).classList.toggle('cache', v !== vue));
+    ['vue-form', 'vue-merci', 'vue-deja'].forEach(v => $(v).classList.toggle('cache', v !== vue));
   };
+
+  if (!DEMANDER_IDENTIFIANT || ref) $('bloc-identifiant').classList.add('cache');
+
+  // ---- Mémoire locale "déjà répondu" (tolérante si le navigateur la bloque) ----
+  const CLE = 'bocklip_avis_livraison';
+  function dejaRepondu() {
+    try {
+      const t = Number(localStorage.getItem(CLE) || 0);
+      return t && (Date.now() - t) < JOURS_ANTI_DOUBLON * 864e5;
+    } catch (e) { return false; }
+  }
+  function memoriserReponse() {
+    try { localStorage.setItem(CLE, String(Date.now())); } catch (e) {}
+  }
+  if (dejaRepondu()) afficher('vue-deja');
+  $('btn-nouvelle').addEventListener('click', () => afficher('vue-form'));
 
   // ---- Étoiles ----
   const SVG_ETOILE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6L2.5 9.4l6.6-.8z"/></svg>';
@@ -203,10 +234,10 @@
 
   // ---- Envoi ----
   const MESSAGES_ERREUR = {
-    lien_invalide: 'Ce lien n\'est pas reconnu.',
     note_invalide: 'Merci de choisir une note.',
     occupe: 'Serveur occupé, réessayez dans quelques secondes.',
-    format_invalide: 'Une erreur est survenue, réessayez.'
+    format_invalide: 'Une erreur est survenue, réessayez.',
+    reponse_invalide: 'Une erreur est survenue, réessayez.'
   };
 
   $('vue-form').addEventListener('submit', async e => {
@@ -220,10 +251,12 @@
 
     const choix = document.querySelector('input[name="ponctualite"]:checked');
     const payload = {
-      token,
       note,
       ponctualite: choix ? choix.value : '',
-      commentaire: $('commentaire').value.trim()
+      commentaire: $('commentaire').value.trim(),
+      identifiant: $('identifiant').value.trim(),
+      ref,
+      site: $('site').value // champ piège
     };
 
     try {
@@ -235,40 +268,20 @@
       });
       const res = await rep.json();
 
-      if (res.ok) {
-        if (res.avisGoogle) {
-          $('lien-avis-google').href = res.avisGoogle;
-          $('bloc-avis-google').classList.remove('cache');
-        }
-        afficher('vue-merci');
-      } else if (res.erreur === 'deja_repondu') {
-        afficher('vue-deja');
-      } else if (res.erreur === 'lien_invalide') {
-        afficher('vue-invalide');
-      } else {
-        throw new Error(res.erreur);
+      if (!res.ok) throw new Error(res.erreur);
+
+      memoriserReponse();
+      if (res.avisGoogle) {
+        $('lien-avis-google').href = res.avisGoogle;
+        $('bloc-avis-google').classList.remove('cache');
       }
+      afficher('vue-merci');
     } catch (err) {
       $('erreur').textContent = MESSAGES_ERREUR[err.message] || 'Connexion impossible, vérifiez votre réseau et réessayez.';
       btn.disabled = false;
       btn.textContent = 'Envoyer mon avis';
     }
   });
-
-  // ---- Vérification du lien au chargement ----
-  (async function init() {
-    if (!/^[a-z0-9]{6,16}$/.test(token)) { afficher('vue-invalide'); return; }
-    try {
-      const rep = await fetch(API_URL + '?action=check&t=' + encodeURIComponent(token));
-      const res = await rep.json();
-      if (!res.valid) { afficher('vue-invalide'); return; }
-      if (res.deja) { afficher('vue-deja'); return; }
-    } catch (err) {
-      // En cas d'échec réseau de la vérification, on affiche quand même le formulaire :
-      // le serveur revérifie le token à l'envoi.
-    }
-    afficher('vue-form');
-  })();
 </script>
 </body>
 </html>
