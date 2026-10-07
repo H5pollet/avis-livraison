@@ -5,106 +5,168 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex, nofollow">
   <title>Votre avis sur la livraison — Bocklip</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Raleway:ital,wght@0,300;0,400;0,500;0,700;0,800;1,300&display=swap" rel="stylesheet">
   <style>
+    /* ===== Charte Bocklip : noir, blanc + 3 gris (20 %, 10 %, 3 %), typo Raleway ===== */
     :root {
-      --fond: #f6f4f0;
-      --carte: #ffffff;
-      --texte: #1f1f1f;
-      --discret: #6b6b6b;
-      --bordure: #e3dfd8;
-      --accent: #1f3a33;        /* couleur principale — à ajuster à la charte Bocklip */
-      --accent-texte: #ffffff;
-      --etoile: #d9d4cb;
-      --etoile-on: #e8a317;
-      --erreur: #b3261e;
-      --rayon: 14px;
+      --noir: #000000;
+      --blanc: #ffffff;
+      --gris-20: #cccccc;
+      --gris-10: #e6e6e6;
+      --gris-03: #f7f7f7;
+      --texte-doux: #4d4d4d;
     }
     * { box-sizing: border-box; }
     body {
       margin: 0;
-      background: var(--fond);
-      color: var(--texte);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      line-height: 1.45;
+      background: var(--gris-03);
+      color: var(--noir);
+      font-family: "Raleway", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      font-weight: 400;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
     }
-    main { max-width: 520px; margin: 0 auto; padding: 24px 16px 48px; }
-    .logo { font-weight: 700; letter-spacing: .14em; font-size: 15px; color: var(--accent); text-align: center; margin: 8px 0 20px; }
-    .carte { background: var(--carte); border: 1px solid var(--bordure); border-radius: var(--rayon); padding: 24px 20px; }
-    h1 { font-size: 21px; margin: 0 0 6px; line-height: 1.3; }
-    .intro { color: var(--discret); margin: 0 0 24px; font-size: 15px; }
-    .question { margin: 0 0 26px; }
-    .question > label, .question > .titre { display: block; font-weight: 600; margin-bottom: 10px; font-size: 16px; }
+    main { max-width: 540px; margin: 0 auto; padding: 0 16px 40px; }
 
-    /* Étoiles */
-    .etoiles { display: flex; justify-content: space-between; gap: 2px; }
+    /* ===== En-tête : logo + baseline, zone d'exclusion respectée ===== */
+    header { text-align: center; padding: 40px 0 28px; }
+    .logo { display: block; height: 30px; width: auto; margin: 0 auto; }
+    .logo-texte { font-weight: 500; letter-spacing: .08em; font-size: 30px; line-height: 30px; }
+    .baseline { font-weight: 300; font-size: 14px; letter-spacing: .06em; margin: 14px 0 0; color: var(--texte-doux); }
+
+    /* ===== Carte avec assets graphiques (équerre, croix, hachures) ===== */
+    .carte {
+      position: relative;
+      background: var(--blanc);
+      padding: 40px 24px 36px;
+    }
+    .carte::before { /* équerre noire en haut à droite */
+      content: ""; position: absolute; top: -8px; right: -8px;
+      width: 56px; height: 56px;
+      border-top: 7px solid var(--noir); border-right: 7px solid var(--noir);
+    }
+    .croix { position: absolute; left: 18px; bottom: 18px; width: 26px; height: 26px; pointer-events: none; }
+    .croix::before, .croix::after { content: ""; position: absolute; background: var(--noir); }
+    .croix::before { left: 50%; top: 0; width: 1px; height: 100%; }
+    .croix::after  { top: 50%; left: 0; height: 1px; width: 100%; }
+    .hachures {
+      height: 14px; width: 120px; margin: 0 0 28px;
+      background: repeating-linear-gradient(135deg, var(--noir) 0 1px, transparent 1px 8px);
+    }
+
+    h1 { font-weight: 300; font-size: 30px; line-height: 1.2; margin: 0 0 10px; }
+    .intro { font-weight: 300; color: var(--texte-doux); margin: 0 0 36px; font-size: 15px; }
+
+    /* Titres de question au style « libellé » de la charte */
+    .question { margin: 0 0 34px; }
+    .surtitre {
+      display: block; font-weight: 800; font-size: 11px; letter-spacing: .3em;
+      text-transform: uppercase; margin-bottom: 6px;
+    }
+    .question > label, .question > .titre { display: block; font-weight: 500; font-size: 17px; margin-bottom: 14px; }
+    .facultatif { font-weight: 300; font-style: italic; color: var(--texte-doux); font-size: 14px; }
+
+    /* ===== Étoiles (noir sur blanc, pas d'autre couleur) ===== */
+    .etoiles { display: flex; justify-content: center; gap: 10px; }
     .etoile {
-      flex: 1 1 0; max-width: 44px; aspect-ratio: 1;
-      padding: 0; border: 0; background: none; cursor: pointer;
-      color: var(--etoile); transition: transform .1s, color .1s;
+      width: 52px; height: 52px; padding: 0; border: 0; background: none; cursor: pointer;
+      color: var(--noir); transition: transform .12s;
       -webkit-tap-highlight-color: transparent;
     }
     .etoile svg { width: 100%; height: 100%; display: block; }
-    .etoile.on { color: var(--etoile-on); }
-    .etoile:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
-    .etoile:active { transform: scale(.9); }
-    .echelle { display: flex; justify-content: space-between; font-size: 12px; color: var(--discret); margin-top: 6px; }
-    .valeur { text-align: center; font-weight: 600; margin-top: 8px; min-height: 22px; color: var(--accent); }
+    .etoile path { fill: transparent; stroke: var(--gris-20); stroke-width: 1.2; transition: fill .12s, stroke .12s; }
+    .etoile.on path { fill: var(--noir); stroke: var(--noir); }
+    .etoile:focus-visible { outline: 1px solid var(--noir); outline-offset: 3px; }
+    .etoile:active { transform: scale(.92); }
+    .echelle { display: flex; justify-content: space-between; font-size: 12px; font-weight: 300; color: var(--texte-doux); margin: 8px auto 0; max-width: 300px; }
+    .valeur { text-align: center; font-weight: 300; font-style: italic; margin-top: 10px; min-height: 24px; }
 
-    /* Choix */
-    .choix { display: flex; gap: 8px; }
+    /* ===== Choix Oui / Plutôt / Non ===== */
+    .choix { display: flex; gap: 10px; }
     .choix input { position: absolute; opacity: 0; pointer-events: none; }
     .choix label {
-      flex: 1; text-align: center; padding: 11px 6px; border: 1px solid var(--bordure);
-      border-radius: 10px; cursor: pointer; font-size: 15px; background: #fff;
+      flex: 1; text-align: center; padding: 12px 6px; border: 1px solid var(--noir);
+      cursor: pointer; font-size: 15px; font-weight: 500; background: var(--blanc);
+      transition: background .12s, color .12s;
     }
-    .choix input:checked + label { background: var(--accent); color: var(--accent-texte); border-color: var(--accent); }
-    .choix input:focus-visible + label { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .choix input:checked + label { background: var(--noir); color: var(--blanc); }
+    .choix input:focus-visible + label { outline: 1px solid var(--noir); outline-offset: 3px; }
 
     textarea, input[type="text"] {
-      width: 100%; padding: 12px; font: inherit; font-size: 16px;
-      border: 1px solid var(--bordure); border-radius: 10px;
+      width: 100%; padding: 12px; font: inherit; font-size: 16px; font-weight: 400;
+      border: 1px solid var(--gris-20); border-radius: 0; background: var(--blanc);
+      -webkit-appearance: none;
     }
-    textarea { min-height: 96px; resize: vertical; }
-    textarea:focus, input[type="text"]:focus { outline: 2px solid var(--accent); border-color: transparent; }
-    .facultatif { font-weight: 400; color: var(--discret); font-size: 14px; }
+    textarea { min-height: 100px; resize: vertical; }
+    textarea:focus, input[type="text"]:focus { outline: none; border-color: var(--noir); }
 
     /* Champ piège anti-robots : invisible pour les humains */
     .piege { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
 
+    /* ===== Boutons ===== */
     button.envoyer, a.bouton {
-      display: block; width: 100%; padding: 14px; border: 0; border-radius: 10px;
-      background: var(--accent); color: var(--accent-texte); font: inherit; font-size: 16px; font-weight: 600;
-      cursor: pointer; text-align: center; text-decoration: none;
+      display: block; width: 100%; padding: 15px; border: 1px solid var(--noir); border-radius: 0;
+      background: var(--noir); color: var(--blanc); font: inherit; font-size: 15px; font-weight: 700;
+      letter-spacing: .08em; cursor: pointer; text-align: center; text-decoration: none;
+      transition: background .15s, color .15s;
     }
-    button.envoyer:disabled { opacity: .4; cursor: not-allowed; }
-    .message-erreur { color: var(--erreur); font-size: 14px; margin-top: 10px; min-height: 20px; text-align: center; }
+    button.envoyer:hover:not(:disabled), a.bouton:hover { background: var(--blanc); color: var(--noir); }
+    button.envoyer:disabled { background: var(--gris-10); border-color: var(--gris-10); color: var(--texte-doux); cursor: not-allowed; }
+    .message-erreur { font-size: 14px; margin-top: 12px; min-height: 20px; text-align: center; font-weight: 500; }
 
-    .etat { text-align: center; padding: 12px 0; }
-    .etat .icone { font-size: 44px; margin-bottom: 8px; }
-    .etat p { color: var(--discret); }
-    .lien-discret { background: none; border: 0; color: var(--discret); text-decoration: underline; font: inherit; font-size: 14px; cursor: pointer; margin-top: 16px; }
+    /* ===== États (merci / déjà répondu) ===== */
+    .etat { text-align: center; padding: 8px 0 12px; }
+    .etat h1 { margin-top: 8px; }
+    .etat p { color: var(--texte-doux); font-weight: 300; }
+    .fleche { width: 1px; height: 48px; background: var(--noir); margin: 0 auto 18px; position: relative; }
+    .fleche::after {
+      content: ""; position: absolute; left: -4px; bottom: 0; width: 7px; height: 7px;
+      border-right: 1px solid var(--noir); border-bottom: 1px solid var(--noir); transform: rotate(45deg);
+    }
+    .bloc-avis { margin-top: 28px; padding-top: 24px; border-top: 1px solid var(--gris-10); }
+    .lien-discret { background: none; border: 0; color: var(--noir); text-decoration: underline; font: inherit; font-size: 14px; font-weight: 300; cursor: pointer; margin-top: 18px; }
+
+    footer { text-align: center; padding: 28px 0 0; font-size: 12px; font-weight: 300; color: var(--texte-doux); letter-spacing: .04em; }
+    footer a { color: inherit; }
+
     .cache { display: none !important; }
+
+    @media (max-width: 380px) {
+      .etoile { width: 46px; height: 46px; }
+      .etoiles { gap: 6px; }
+      h1 { font-size: 26px; }
+    }
   </style>
 </head>
 <body>
 <main>
-  <div class="logo">BOCKLIP</div>
+  <header>
+    <img class="logo" id="logo" src="https://bocklip.com/images/bocklip-logo.svg" alt="Bocklip">
+    <p class="baseline">Et vos meubles vous ressemblent.</p>
+  </header>
 
   <div class="carte">
+    <span class="croix" aria-hidden="true"></span>
+
     <!-- Formulaire -->
     <form id="vue-form" novalidate>
-      <h1>Comment s'est passée votre livraison ?</h1>
-      <p class="intro">30 secondes pour nous aider à nous améliorer. Merci !</p>
+      <div class="hachures" aria-hidden="true"></div>
+      <h1>Comment s'est passée votre livraison&nbsp;?</h1>
+      <p class="intro">30 secondes pour nous aider à nous améliorer. Merci&nbsp;!</p>
 
       <div class="question">
-        <span class="titre" id="titre-note">Globalement, êtes-vous satisfait de votre livraison ?</span>
+        <span class="surtitre">01</span>
+        <span class="titre" id="titre-note">Globalement, êtes-vous satisfait de votre livraison&nbsp;?</span>
         <div class="etoiles" id="etoiles" role="radiogroup" aria-labelledby="titre-note"></div>
         <div class="echelle"><span>Pas du tout</span><span>Totalement</span></div>
         <div class="valeur" id="valeur" aria-live="polite"></div>
       </div>
 
       <div class="question">
-        <span class="titre">Nos livreurs ont-ils été soigneux avec vos façades ?</span>
+        <span class="surtitre">02</span>
+        <span class="titre">Nos livreurs ont-ils été soigneux avec vos façades&nbsp;?</span>
         <div class="choix">
           <input type="radio" name="ponctualite" id="p-oui" value="Oui"><label for="p-oui">Oui</label>
           <input type="radio" name="ponctualite" id="p-plutot" value="Plutôt"><label for="p-plutot">Plutôt</label>
@@ -113,11 +175,13 @@
       </div>
 
       <div class="question">
-        <label for="commentaire"><span id="libelle-commentaire">Un commentaire ?</span> <span class="facultatif">(facultatif)</span></label>
+        <span class="surtitre">03</span>
+        <label for="commentaire"><span id="libelle-commentaire">Un commentaire&nbsp;?</span> <span class="facultatif">(facultatif)</span></label>
         <textarea id="commentaire" maxlength="2000"></textarea>
       </div>
 
       <div class="question" id="bloc-identifiant">
+        <span class="surtitre">04</span>
         <label for="identifiant">N° de commande ou nom <span class="facultatif">(facultatif)</span></label>
         <input type="text" id="identifiant" maxlength="100" autocomplete="off">
       </div>
@@ -127,29 +191,33 @@
         <input type="text" id="site" tabindex="-1" autocomplete="off">
       </div>
 
-      <button type="submit" class="envoyer" id="btn-envoyer" disabled>Envoyer mon avis</button>
+      <button type="submit" class="envoyer" id="btn-envoyer" disabled>ENVOYER MON AVIS</button>
       <div class="message-erreur" id="erreur" role="alert"></div>
     </form>
 
     <!-- Merci -->
     <div id="vue-merci" class="etat cache">
-      <div class="icone">🙏</div>
-      <h1>Merci pour votre avis !</h1>
-      <p>Votre réponse a bien été enregistrée.</p>
-      <div id="bloc-avis-google" class="cache">
-        <p>Vous avez apprécié ? Un avis Google nous aiderait énormément.</p>
-        <a class="bouton" id="lien-avis-google" href="#" target="_blank" rel="noopener">Laisser un avis Google</a>
+      <div class="fleche" aria-hidden="true"></div>
+      <span class="surtitre">Merci</span>
+      <h1>Votre avis a bien été enregistré.</h1>
+      <p>Il nous aide à améliorer chaque livraison.</p>
+      <div id="bloc-avis-google" class="bloc-avis cache">
+        <p>Vous avez apprécié votre expérience&nbsp;? Un avis Google nous aiderait énormément.</p>
+        <a class="bouton" id="lien-avis-google" href="#" target="_blank" rel="noopener">LAISSER UN AVIS GOOGLE</a>
       </div>
     </div>
 
     <!-- Déjà répondu (même téléphone, dans les 7 derniers jours) -->
     <div id="vue-deja" class="etat cache">
-      <div class="icone">✅</div>
-      <h1>Merci, vous avez déjà répondu</h1>
+      <div class="fleche" aria-hidden="true"></div>
+      <span class="surtitre">Merci</span>
+      <h1>Vous avez déjà répondu.</h1>
       <p>Votre avis a bien été enregistré.</p>
       <button type="button" class="lien-discret" id="btn-nouvelle">Donner un avis sur une autre livraison</button>
     </div>
   </div>
+
+  <footer><a href="https://bocklip.com/fr/" target="_blank" rel="noopener">bocklip.com</a></footer>
 </main>
 
 <script>
@@ -164,10 +232,16 @@
   const JOURS_ANTI_DOUBLON = 7;
   // =================================================
 
-  const LIBELLES = {
-    1: 'Très déçu', 2: 'Déçu', 3: 'Insatisfait', 4: 'Plutôt insatisfait', 5: 'Moyen',
-    6: 'Correct', 7: 'Satisfait', 8: 'Très satisfait', 9: 'Parfait !'
-  };
+  const NB_ETOILES = 5;
+  const LIBELLES = { 1: 'Très déçu', 2: 'Déçu', 3: 'Moyen', 4: 'Satisfait', 5: 'Très satisfait' };
+
+  // Si le logo ne se charge pas, on affiche le nom en texte
+  document.getElementById('logo').addEventListener('error', function () {
+    const t = document.createElement('div');
+    t.className = 'logo-texte';
+    t.textContent = 'BOCKLIP';
+    this.replaceWith(t);
+  });
 
   // Référence facultative passée dans le lien (ex. ?c=12345 si ton outil SMS sait insérer une variable)
   const params = new URLSearchParams(location.search);
@@ -196,21 +270,21 @@
   $('btn-nouvelle').addEventListener('click', () => afficher('vue-form'));
 
   // ---- Étoiles ----
-  const SVG_ETOILE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6L2.5 9.4l6.6-.8z"/></svg>';
+  const SVG_ETOILE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path stroke-linejoin="round" d="M12 2.8l2.8 5.9 6.4.8-4.7 4.4 1.2 6.4L12 17.1l-5.7 3.2 1.2-6.4L2.8 9.5l6.4-.8z"/></svg>';
   const boutons = [];
-  for (let i = 1; i <= 9; i++) {
+  for (let i = 1; i <= NB_ETOILES; i++) {
     const b = document.createElement('button');
     b.type = 'button';
     b.className = 'etoile';
     b.setAttribute('role', 'radio');
     b.setAttribute('aria-checked', 'false');
-    b.setAttribute('aria-label', i + ' sur 9 — ' + LIBELLES[i]);
+    b.setAttribute('aria-label', i + ' sur ' + NB_ETOILES + ' — ' + LIBELLES[i]);
     b.innerHTML = SVG_ETOILE;
     b.addEventListener('click', () => choisirNote(i));
     b.addEventListener('mouseenter', () => colorier(i));
     b.addEventListener('mouseleave', () => colorier(note));
     b.addEventListener('keydown', e => {
-      if (e.key === 'ArrowRight' || e.key === 'ArrowUp') { e.preventDefault(); choisirNote(Math.min(9, (note || 0) + 1), true); }
+      if (e.key === 'ArrowRight' || e.key === 'ArrowUp') { e.preventDefault(); choisirNote(Math.min(NB_ETOILES, (note || 0) + 1), true); }
       if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') { e.preventDefault(); choisirNote(Math.max(1, (note || 2) - 1), true); }
     });
     boutons.push(b);
@@ -226,8 +300,8 @@
     colorier(n);
     boutons.forEach((b, idx) => b.setAttribute('aria-checked', String(idx + 1 === n)));
     if (focus) boutons[n - 1].focus();
-    $('valeur').textContent = n + ' / 9 — ' + LIBELLES[n];
-    $('libelle-commentaire').textContent = n <= 5 ? 'Que pourrions-nous améliorer ?' : 'Un commentaire ?';
+    $('valeur').textContent = LIBELLES[n];
+    $('libelle-commentaire').textContent = n <= 3 ? 'Que pourrions-nous améliorer ?' : 'Un commentaire ?';
     $('btn-envoyer').disabled = false;
     $('erreur').textContent = '';
   }
@@ -246,7 +320,7 @@
 
     const btn = $('btn-envoyer');
     btn.disabled = true;
-    btn.textContent = 'Envoi…';
+    btn.textContent = 'ENVOI…';
     $('erreur').textContent = '';
 
     const choix = document.querySelector('input[name="ponctualite"]:checked');
@@ -276,10 +350,11 @@
         $('bloc-avis-google').classList.remove('cache');
       }
       afficher('vue-merci');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (err) {
       $('erreur').textContent = MESSAGES_ERREUR[err.message] || 'Connexion impossible, vérifiez votre réseau et réessayez.';
       btn.disabled = false;
-      btn.textContent = 'Envoyer mon avis';
+      btn.textContent = 'ENVOYER MON AVIS';
     }
   });
 </script>
